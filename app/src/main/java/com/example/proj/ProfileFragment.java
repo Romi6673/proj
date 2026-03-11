@@ -1,64 +1,294 @@
 package com.example.proj;
 
+import static com.example.proj.FBRef.refSto;
+import static com.example.proj.FBRef.refUsers;
+
+import com.bumptech.glide.Glide;
+import android.Manifest;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link ProfileFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
 public class ProfileFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    Uri selectedImageUri;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
-    public ProfileFragment() {
-        // Required empty public constructor
-    }
+    View view;
+    Button userNameEditBtn;
+    Button saveBioBtn;
+    String userId;
+    EditText bioEditText;
+    ImageButton profilePictureBtn;
+    Spinner weakSubSpinner;
+    Spinner strongSubSpinner;
+    String nameStr;
+    String bioStr;
+    LinearLayout dialog_username;
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private static final int REQUEST_READ_STORAGE = 2000;
+    EditText edit_text_dialog; // זה המשתנה שיחזיק את השדה מהדיאלוג
+    AlertDialog.Builder adb;
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ProfileFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static ProfileFragment newInstance(String param1, String param2) {
-        ProfileFragment fragment = new ProfileFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == REQUEST_READ_STORAGE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openGallery();
+            } else {
+                Toast.makeText(getContext(), "Permission denied", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == getActivity().RESULT_OK && data != null && data.getData() != null) {
+            selectedImageUri = data.getData();
+
+            // הצגת התמונה בכפתור מיד (לפני ההעלאה, בשביל חווית משתמש טובה)
+            profilePictureBtn.setImageURI(selectedImageUri);
+
+            // עכשיו מעלים
+            uploadImageToStorage();
+        }
+    }
+
+    private void uploadImageToStorage() {
+        if (selectedImageUri == null) {
+            Toast.makeText(getContext(), "No image selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        StorageReference galleryRef = refSto.child("Pictures/pictures.jpg");
+
+        ProgressDialog progressDialog = new ProgressDialog(getContext());
+        progressDialog.setTitle("Uploading...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        UploadTask uploadTask = galleryRef.putFile(selectedImageUri);
+
+        uploadTask.addOnSuccessListener(taskSnapshot -> {
+            // 1. קבלת הלינק להורדת התמונה מהשרת
+            galleryRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                String downloadUrl = uri.toString();
+
+                // 2. שמירת הלינק ב-Database
+                FirebaseDatabase.getInstance().getReference("Users")
+                        .child(userId)
+                        .child("profilePicUrl")
+                        .setValue(downloadUrl);
+
+                Toast.makeText(getContext(), "Profile pic updated!", Toast.LENGTH_SHORT).show();
+            });
+        })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        progressDialog.dismiss();
+                        Toast.makeText(getContext(),
+                                "Profile picture upload failed",
+                                Toast.LENGTH_LONG).show();
+                    }
+                })
+                .addOnProgressListener(snapshot ->
+                {
+                    double progress =
+                            (100.0 * snapshot.getBytesTransferred()) /
+                                    snapshot.getTotalByteCount();
+                    progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                });
+    }
+
+    public void clickedDownload() {
+        StorageReference refFile = refSto.child("Pictures/pictures.jpg");
+
+        final long MAX_SIZE = 1024 * 1024; // 1MB
+
+        refFile.getBytes(MAX_SIZE)
+                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        profilePictureBtn.setImageBitmap(bitmap);
+                        Toast.makeText(getContext(),
+                                "Download successful",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getContext(),
+                                "Download failed",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+
+    private void openGallery() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select picture"), PICK_IMAGE_REQUEST);
+    }
+
+
+    public void checkPermissionAndOpenGallery() {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_READ_STORAGE);
+            } else {
+                openGallery();
+            }
+        } else {
+            openGallery();
+        }
+    }
+
+
+
+
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_profile, container, false);
+        view = inflater.inflate(R.layout.fragment_profile, container, false);
+
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        } else {
+            // כאן כדאי להחזיר את המשתמש למסך התחברות אם הוא לא מחובר
+            return view;
+        }
+        userNameEditBtn = view.findViewById(R.id.userNameEditBtn);
+        profilePictureBtn = view.findViewById(R.id.profilePictureBtn);
+        TextView tvUsername = view.findViewById(R.id.tvUsername);
+
+        saveBioBtn = view.findViewById(R.id.saveBioBtn);
+        bioEditText = view.findViewById(R.id.bioEditText); //כשמתעסקים עם שמירה בפיירבייס ,
+        // לאחר לחיצה על כפתור  save יש לשמור את הביו על פרטי המשתמש
+
+        ImageButton profilePictureBtn = view.findViewById(R.id.profilePictureBtn);
+
+        dialog_username = (LinearLayout) getLayoutInflater().inflate(R.layout.dialog_username, null);
+
+        edit_text_dialog = dialog_username.findViewById(R.id.edit_text_dialog);
+
+
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+
+
+
+
+
+        refUsers.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Users user = snapshot.getValue(Users.class);
+                if (user != null) {
+                    // מעדכנים את ה-UI רק כאן, כשיש לנו את הנתונים
+                    tvUsername.setText(user.userName);
+                    bioEditText.setText(user.bio);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+           });
+
+
+
+
+
+        adb = new AlertDialog.Builder(this.getContext());
+        adb.setView(dialog_username);
+        adb.setTitle("Update Username");
+
+
+        adb.setPositiveButton("save", (dialog, which) -> {
+            String newUserName = edit_text_dialog.getText().toString();
+            tvUsername.setText(newUserName);
+            FirebaseDatabase.getInstance().getReference("Users")
+                    .child(userId)
+                    .child("userName")
+                    .setValue(newUserName);
+
+            ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
+        });
+
+        userNameEditBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (dialog_username.getParent() != null) {
+                    ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
+                }
+                adb.show();
+            }
+        });
+
+        profilePictureBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                checkPermissionAndOpenGallery();
+            }
+        });
+
+
+        saveBioBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                FirebaseDatabase.getInstance().getReference("Users")
+                        .child(userId)
+                        .child("bio")
+                        .setValue(bioEditText.getText().toString());
+
+            }
+        });
+
+        return view;
+
+
     }
 }

@@ -82,6 +82,7 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -113,59 +114,53 @@ public class SignUpActivity extends AppCompatActivity {
     public void add_user(View view) {
         String email = emailEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
-        if (email.isEmpty() || password.isEmpty())
-        {
+
+        if (email.isEmpty() || password.isEmpty()) {
             Toast.makeText(SignUpActivity.this, "Please fill all fields", Toast.LENGTH_LONG).show();
+            return;
         }
 
-        else
-        {
-            ProgressDialog pd = new ProgressDialog(this);
-            pd.setTitle("Connecting");
-            pd.setMessage("Creating user...");
-            pd.show();
+        ProgressDialog pd = new ProgressDialog(this);
+        pd.setTitle("Connecting");
+        pd.setMessage("Creating user...");
+        pd.show();
 
-            refAuth.createUserWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>()
-                    {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task)
-                        {
-                            pd.dismiss();
 
-                            if (task.isSuccessful())
-                            {
-                                FirebaseUser user = refAuth.getCurrentUser();
-                                user.sendEmailVerification()
-                                        .addOnCompleteListener(verifyTask -> {
-                                            if (verifyTask.isSuccessful()) {
-                                                Toast.makeText(SignUpActivity.this,
-                                                        "Registration successful! Please check your email for verification.",
-                                                        Toast.LENGTH_LONG).show();
+        refAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser firebaseUser = refAuth.getCurrentUser();
+                        if (firebaseUser != null) {
+                            String uid = firebaseUser.getUid();
 
-                                                // התנתקות זמנית כדי שלא יוכל להיכנס עד שיאמת
-                                                FBRef.refAuth.signOut();
+                            // 2. יצירת אובייקט המשתמש (השתמשי ב-HashMap במקום Map.of כדי לאפשר עדכון בהמשך)
+                            Users newUser = new Users(email, password, uid);
 
-                                                // מעבר למסך ההתחברות
-                                                startActivity(new Intent(SignUpActivity.this, MainActivity.class));
-                                                finish();
+                            // 3. שמירה ב-Database תחת ה-UID שלו
+                            FirebaseDatabase.getInstance().getReference("Users")
+                                    .child(uid)
+                                    .setValue(newUser)
+                                    .addOnCompleteListener(dbTask -> {
+                                        pd.dismiss();
+                                        if (dbTask.isSuccessful()) {
+                                            // 4. שליחת אימייל אימות רק אחרי שהכל נשמר
+                                            firebaseUser.sendEmailVerification();
+                                            Toast.makeText(SignUpActivity.this, "User created! Please verify email.", Toast.LENGTH_LONG).show();
 
-                                    Toast.makeText(SignUpActivity.this, " User created successfully! " +
-                                        Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_LONG).show();
-                            }
-
-                            else if (!task.isSuccessful() && task.getException() != null) {
-                                    String message = task.getException().getMessage();
-                                    Toast.makeText(SignUpActivity.this, "Error: " + message, Toast.LENGTH_LONG).show();
-
-                                    // הצגת הודעה למשתמש
-                                }
-                        });
+                                            refAuth.signOut();
+                                            startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                                            finish();
+                                        } else {
+                                            Toast.makeText(SignUpActivity.this, "DB Error: " + dbTask.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                        }
+                    } else {
+                        pd.dismiss();
+                        Toast.makeText(SignUpActivity.this, "Auth Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                     }
+                });
+    }
+}
 
-                }
-            });
-        }
-}
-}
 

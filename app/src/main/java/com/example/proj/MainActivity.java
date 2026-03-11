@@ -1,95 +1,35 @@
 package com.example.proj;
 
-import static com.example.proj.FBRef.refAuth;
-
 import android.annotation.SuppressLint;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ProgressDialog;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
-
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.example.proj.databinding.ActivityMainBinding;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.helper.widget.Carousel;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import android.content.Intent;
-import android.os.Bundle;
-
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.Button;
-import android.widget.Toast;
 
-import android.widget.Switch;
-import android.widget.ArrayAdapter;
-import android.view.View;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
-import androidx.core.view.WindowInsetsCompat;
+import android.widget.ImageButton;
+import android.widget.Spinner;
 
-import com.google.android.material.navigation.NavigationBarView;
-import com.google.firebase.database.DatabaseReference;
-
-import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-
-import android.view.View;
-import android.widget.EditText;
-
-import com.google.firebase.database.DatabaseReference;
-
 public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding binding;
+    Spinner weakSubSpinner;
+    Spinner strongSubSpinner;
+
+    Button userNameEditBtn;
+    Button bioEditBtn;
+
+
 
     @SuppressLint("NonConstantResourceId")
     @Override
@@ -98,6 +38,12 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         replace_fragment(new ProfileFragment());
+        weakSubSpinner = findViewById(R.id.weakSubSpinner);
+        strongSubSpinner = findViewById(R.id.strongSubSpinner);
+        //userNameEditBtn = findViewById(R.id.userNameEditBtn);
+        bioEditBtn = findViewById(R.id.saveBioBtn);
+
+
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId(); // נשמור את ה-ID במשתנה

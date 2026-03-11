@@ -76,6 +76,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import android.view.View;
 import android.widget.EditText;
@@ -146,18 +147,19 @@ public class SignUpActivity extends AppCompatActivity {
                                                 FBRef.refAuth.signOut();
 
                                                 // מעבר למסך ההתחברות
-                                                startActivity(new Intent(SignUpActivity.this, ProfileActivity.class));
+                                                startActivity(new Intent(SignUpActivity.this, MainActivity.class));
                                                 finish();
 
                                     Toast.makeText(SignUpActivity.this, " User created successfully! " +
-                                        task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                        Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_LONG).show();
                             }
 
-                            else
-                            {
-                                Toast.makeText(SignUpActivity.this, "Authentication failed: " +
-                                        task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                            }
+                            else if (!task.isSuccessful() && task.getException() != null) {
+                                    String message = task.getException().getMessage();
+                                    Toast.makeText(SignUpActivity.this, "Error: " + message, Toast.LENGTH_LONG).show();
+
+                                    // הצגת הודעה למשתמש
+                                }
                         });
                     }
 

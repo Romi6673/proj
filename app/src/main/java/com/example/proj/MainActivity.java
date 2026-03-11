@@ -1,5 +1,8 @@
 package com.example.proj;
 
+import static com.example.proj.FBRef.refAuth;
+
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
@@ -31,11 +34,13 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.proj.databinding.ActivityMainBinding;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import android.content.Intent;
 import android.os.Bundle;
@@ -68,6 +73,9 @@ import com.google.android.material.navigation.NavigationBarView;
 import com.google.firebase.database.DatabaseReference;
 
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -79,65 +87,49 @@ import android.widget.EditText;
 
 import com.google.firebase.database.DatabaseReference;
 
-
 public class MainActivity extends AppCompatActivity {
 
-    EditText emailEditText;
-    EditText passwordEditText;
+    ActivityMainBinding binding;
 
-
+    @SuppressLint("NonConstantResourceId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        emailEditText = findViewById(R.id.emailEditText);
-        passwordEditText = findViewById(R.id.passwordEditText);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        replace_fragment(new ProfileFragment());
 
+        binding.bottomNavigationView.setOnItemSelectedListener(item -> {
+            int itemId = item.getItemId(); // נשמור את ה-ID במשתנה
+
+            if (itemId == R.id.profile) {
+                replace_fragment(new ProfileFragment());
+            } else if (itemId == R.id.chats) {
+                replace_fragment(new ChatsFragment());
+            } else if (itemId == R.id.search) {
+                replace_fragment(new SearchFragment());
+            } else {
+                return false; // במקרה ששום דבר לא נמצא
+            }
+            return true;
+        });
     }
 
-    public void connect_user(View view) {
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
-
-        // בדיקה בסיסית שהשדות לא ריקים
-        if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
-            return;
+    @Override
+    protected void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = FBRef.refAuth.getCurrentUser();
+        if (currentUser == null) {
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish();
         }
-
-        // שימוש ב-FirebaseAuth דרך המחלקה FBRef שיצרת
-        FBRef.refAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        // התחברות הצליחה!
-                        Toast.makeText(MainActivity.this, "Login Successful", Toast.LENGTH_SHORT).show();
-
-                        // כאן את מעדכנת את ה-SharedPreferences (כמו שלמדנו בהתחלה)
-                        // כדי שהמסך לא יופיע שוב בפעם הבאה
-                        updateLoginStatus();
-
-                        // מעבר למסך הראשי
-                        Intent intent = new Intent(MainActivity.this, ProfileActivity.class);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        // אם ההתחברות נכשלה (סיסמה שגויה, משתמש לא קיים וכו')
-                        Toast.makeText(MainActivity.this, "Authentication failed: " +
-                                task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
     }
 
-    // פונקציית עזר לשמירת סטטוס התחברות
-    private void updateLoginStatus() {
-        SharedPreferences preferences = getSharedPreferences("PREFERENCE", MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString("FirstTimeInstall", "Yes");
-        editor.apply();
-    }
-
-    public void signUpOnClick(View view) {
-        Intent intent = new Intent(MainActivity.this, SignUpActivity.class);
-        startActivity(intent);
+    private void replace_fragment(Fragment fragment){
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.replace(R.id.framelayout, fragment);
+        fragmentTransaction.commit();
     }
 }

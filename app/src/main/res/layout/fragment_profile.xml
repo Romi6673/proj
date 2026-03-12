@@ -15,6 +15,7 @@
             android:id="@+id/profilePictureBtn"
             android:layout_width="141dp"
             android:layout_height="145dp"
+            android:backgroundTint="#B3E5FC"
             android:src="@drawable/outline_account_circle_24" />
 
         <LinearLayout
@@ -28,6 +29,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="UserName"
+                android:textColor="#0277BD"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
@@ -35,6 +37,7 @@
                 android:id="@+id/userNameEditBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:backgroundTint="#03A9F4"
                 android:text="Edit Username" />
 
             <TextView
@@ -43,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:text="Score: 1,250"
-                android:textColor="#070000"
+                android:textColor="#0288D1"
                 android:textSize="18sp" />
 
         </LinearLayout>
@@ -62,18 +65,31 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
+        android:backgroundTint="#03A9F4"
         android:text="save" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Weak Subjects"
+        android:textColor="#0277BD" />
 
     <Spinner
         android:id="@+id/weakSubSpinner"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="96dp" />
+        android:layout_marginTop="24dp"
+        android:text="Strong Subjects"
+        android:textColor="#0277BD" />
 
     <Spinner
         android:id="@+id/strongSubSpinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="52dp" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

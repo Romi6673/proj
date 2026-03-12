@@ -2,9 +2,17 @@ package com.example.proj;
 
 import static com.example.proj.FBRef.refSto;
 import static com.example.proj.FBRef.refUsers;
-
-import com.bumptech.glide.Glide;
+import android.widget.ArrayAdapter;
+import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.Manifest;
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -30,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -39,6 +48,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
+import java.util.Map;
 
 public class ProfileFragment extends Fragment {
 
@@ -60,6 +71,14 @@ public class ProfileFragment extends Fragment {
     private static final int REQUEST_READ_STORAGE = 2000;
     EditText edit_text_dialog; // זה המשתנה שיחזיק את השדה מהדיאלוג
     AlertDialog.Builder adb;
+
+    public String[] subjectsWeakArr = { "History" , "Math" , "English", "Science"};
+    public String[] subjectsStrongArr = { "History" , "Math" , "English", "Science"};
+
+    public boolean[] subjectsWeakBool = {false, false, false, false};
+    public boolean[] subjectsStrongBool = {false, false, false, false};
+
+
 
 
     @Override
@@ -96,44 +115,36 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        StorageReference galleryRef = refSto.child("Pictures/pictures.jpg");
+        // 1. נתיב ייחודי לכל משתמש (שימוש ב-userId)
+        StorageReference galleryRef = refSto.child("Pictures/" + userId + ".jpg");
 
         ProgressDialog progressDialog = new ProgressDialog(getContext());
-        progressDialog.setTitle("Uploading...");
-        progressDialog.setCancelable(false);
+        progressDialog.setMessage("Uploading...");
         progressDialog.show();
 
-        UploadTask uploadTask = galleryRef.putFile(selectedImageUri);
+        // 2. העלאת הקובץ
+        galleryRef.putFile(selectedImageUri)
+                .addOnSuccessListener(taskSnapshot -> {
 
-        uploadTask.addOnSuccessListener(taskSnapshot -> {
-            // 1. קבלת הלינק להורדת התמונה מהשרת
-            galleryRef.getDownloadUrl().addOnSuccessListener(uri -> {
-                String downloadUrl = uri.toString();
+                    // 3. הצלחה! עכשיו מושכים את ה-URL של התמונה שהרגע עלתה
+                    galleryRef.getDownloadUrl().addOnSuccessListener(uri -> {
+                        String downloadUrl = uri.toString();
 
-                // 2. שמירת הלינק ב-Database
-                FirebaseDatabase.getInstance().getReference("Users")
-                        .child(userId)
-                        .child("profilePicUrl")
-                        .setValue(downloadUrl);
-
-                Toast.makeText(getContext(), "Profile pic updated!", Toast.LENGTH_SHORT).show();
-            });
-        })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        progressDialog.dismiss();
-                        Toast.makeText(getContext(),
-                                "Profile picture upload failed",
-                                Toast.LENGTH_LONG).show();
-                    }
+                        // 4. שמירת הלינק ב-Database תחת המשתמש הנוכחי
+                        refUsers.child(userId).child("profilePicUrl").setValue(downloadUrl)
+                                .addOnCompleteListener(task -> {
+                                    progressDialog.dismiss();
+                                    if (task.isSuccessful()) {
+                                        Toast.makeText(getContext(), "Profile picture updated successfully!", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(getContext(), "Database update failed", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    });
                 })
-                .addOnProgressListener(snapshot ->
-                {
-                    double progress =
-                            (100.0 * snapshot.getBytesTransferred()) /
-                                    snapshot.getTotalByteCount();
-                    progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                .addOnFailureListener(e -> {
+                    progressDialog.dismiss();
+                    Toast.makeText(getContext(), "Upload failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -194,6 +205,7 @@ public class ProfileFragment extends Fragment {
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_profile, container, false);
 
+
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         } else {
@@ -203,6 +215,21 @@ public class ProfileFragment extends Fragment {
         userNameEditBtn = view.findViewById(R.id.userNameEditBtn);
         profilePictureBtn = view.findViewById(R.id.profilePictureBtn);
         TextView tvUsername = view.findViewById(R.id.tvUsername);
+        TextView tvScore = view.findViewById(R.id.tvScore);
+
+
+
+        weakSubSpinner = view.findViewById(R.id.weakSubSpinner);
+        strongSubSpinner = view.findViewById(R.id.strongSubSpinner);
+
+        custom_adapter_weak customAdapterWeak = new custom_adapter_weak (getContext(), subjectsWeakArr, subjectsWeakBool);
+        weakSubSpinner.setAdapter(customAdapterWeak) ;
+
+        custom_adapter_strong customAdapterStrong = new custom_adapter_strong (getContext(), subjectsStrongArr, subjectsStrongBool);
+        strongSubSpinner.setAdapter(customAdapterStrong) ;
+
+
+
 
         saveBioBtn = view.findViewById(R.id.saveBioBtn);
         bioEditText = view.findViewById(R.id.bioEditText); //כשמתעסקים עם שמירה בפיירבייס ,
@@ -219,9 +246,6 @@ public class ProfileFragment extends Fragment {
 
 
 
-
-
-
         refUsers.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -230,6 +254,25 @@ public class ProfileFragment extends Fragment {
                     // מעדכנים את ה-UI רק כאן, כשיש לנו את הנתונים
                     tvUsername.setText(user.userName);
                     bioEditText.setText(user.bio);
+
+
+
+                    // בתוך ה-onDataChange:
+                    Users u = snapshot.getValue(Users.class);
+                    if (u != null) {
+                        tvUsername.setText(u.userName);
+                        bioEditText.setText(u.bio);
+
+                        // הצגת התמונה בעזרת Glide (אם השדה לא ריק)
+                        if (u.profilePicUrl != null && !u.profilePicUrl.isEmpty()) {
+                            Glide.with(getContext())
+                                    .load(u.profilePicUrl)
+                                    .into(profilePictureBtn);
+                        }
+                    }
+
+
+
                 }
             }
             @Override
@@ -286,6 +329,7 @@ public class ProfileFragment extends Fragment {
 
             }
         });
+
 
         return view;
 

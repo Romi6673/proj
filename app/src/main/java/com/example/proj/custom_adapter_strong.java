@@ -8,17 +8,20 @@ import android.widget.BaseAdapter;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+
 
 public class custom_adapter_strong extends BaseAdapter{
     private Context context;
     private String[] subjects;
-    private boolean[] isChecked;
+    private boolean[] isCheckedArr;
     private LayoutInflater inflater;
 
     public custom_adapter_strong(Context context, String[] subjects, boolean[] isChecked) {
         this.context = context;
         this.subjects = subjects;
-        this.isChecked = isChecked;
+        this.isCheckedArr = isChecked;
         this.inflater = LayoutInflater.from(context);
 
     }
@@ -41,9 +44,33 @@ public class custom_adapter_strong extends BaseAdapter{
         TextView textView = convertView.findViewById(R.id.textView);
         textView.setText(subjects[position]);
         Switch switch1 = convertView.findViewById(R.id.switch1);
-        switch1.setChecked(isChecked[position]);
-        return convertView;
+        switch1.setChecked(isCheckedArr[position]);
 
+
+        String subjectName = subjects[position];
+        textView.setText(subjectName);
+
+        // חשוב: מסירים מאזין קודם כדי למנוע באגים בזמן גלילה
+        switch1.setOnCheckedChangeListener(null);
+        switch1.setChecked(isCheckedArr[position]);
+
+        // הוספת המאזין החדש
+        switch1.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // 1. עדכון המערך המקומי בפרגמנט
+            isCheckedArr[position] = isChecked;
+
+            // 2. עדכון ה-Firebase
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+            // כאן את בוחרת אם זה weakSubjects או strongSubjects לפי שם האדפטר
+            FirebaseDatabase.getInstance().getReference("Users")
+                    .child(userId)
+                    .child("strongSubjects") // או strongSubjects במחלקה השנייה
+                    .child(subjectName)
+                    .setValue(isChecked);
+        });
+
+        return convertView;
 
 
     }

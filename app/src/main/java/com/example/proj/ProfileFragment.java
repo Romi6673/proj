@@ -115,7 +115,6 @@ public class ProfileFragment extends Fragment {
             return;
         }
 
-        // 1. נתיב ייחודי לכל משתמש (שימוש ב-userId)
         StorageReference galleryRef = refSto.child("Pictures/" + userId + ".jpg");
 
         ProgressDialog progressDialog = new ProgressDialog(getContext());
@@ -148,31 +147,6 @@ public class ProfileFragment extends Fragment {
                 });
     }
 
-    public void clickedDownload() {
-        StorageReference refFile = refSto.child("Pictures/pictures.jpg");
-
-        final long MAX_SIZE = 1024 * 1024; // 1MB
-
-        refFile.getBytes(MAX_SIZE)
-                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                    @Override
-                    public void onSuccess(byte[] bytes) {
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                        profilePictureBtn.setImageBitmap(bitmap);
-                        Toast.makeText(getContext(),
-                                "Download successful",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(getContext(),
-                                "Download failed",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
 
 
     private void openGallery() {
@@ -249,35 +223,51 @@ public class ProfileFragment extends Fragment {
         refUsers.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Users user = snapshot.getValue(Users.class);
-                if (user != null) {
-                    // מעדכנים את ה-UI רק כאן, כשיש לנו את הנתונים
-                    tvUsername.setText(user.userName);
-                    bioEditText.setText(user.bio);
+                Users u = snapshot.getValue(Users.class);
+                if (u != null) {
+                    // 1. עדכון פרטים כלליים
+                    tvUsername.setText(u.userName);
+                    bioEditText.setText(u.bio);
 
+                    // 2. טעינת תמונת פרופיל עם Glide
+                    if (u.profilePicUrl != null && !u.profilePicUrl.isEmpty()) {
+                        Glide.with(getContext())
+                                .load(u.profilePicUrl)
+                                .into(profilePictureBtn);
+                    }
 
-
-                    // בתוך ה-onDataChange:
-                    Users u = snapshot.getValue(Users.class);
-                    if (u != null) {
-                        tvUsername.setText(u.userName);
-                        bioEditText.setText(u.bio);
-
-                        // הצגת התמונה בעזרת Glide (אם השדה לא ריק)
-                        if (u.profilePicUrl != null && !u.profilePicUrl.isEmpty()) {
-                            Glide.with(getContext())
-                                    .load(u.profilePicUrl)
-                                    .into(profilePictureBtn);
+                    // 3. עדכון מערך המקצועות החלשים (Weak Subjects)
+                    if (u.weakSubjects != null) {
+                        for (int i = 0; i < subjectsWeakArr.length; i++) {
+                            Boolean isSelected = u.weakSubjects.get(subjectsWeakArr[i]);
+                            // אם הערך קיים ב-Map, נשים אותו במערך, אחרת false
+                            subjectsWeakBool[i] = (isSelected != null && isSelected);
+                        }
+                        // עדכון האדפטר של הספינר החלש
+                        if (weakSubSpinner.getAdapter() != null) {
+                            ((custom_adapter_weak) weakSubSpinner.getAdapter()).notifyDataSetChanged();
                         }
                     }
 
-
-
+                    // 4. עדכון מערך המקצועות החזקים (Strong Subjects)
+                    if (u.strongSubjects != null) {
+                        for (int i = 0; i < subjectsStrongArr.length; i++) {
+                            Boolean isSelected = u.strongSubjects.get(subjectsStrongArr[i]);
+                            subjectsStrongBool[i] = (isSelected != null && isSelected);
+                        }
+                        // עדכון האדפטר של הספינר החזק
+                        if (strongSubSpinner.getAdapter() != null) {
+                            ((custom_adapter_strong) strongSubSpinner.getAdapter()).notifyDataSetChanged();
+                        }
+                    }
                 }
             }
+
             @Override
-            public void onCancelled(@NonNull DatabaseError error) { }
-           });
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(getContext(), "Error loading profile", Toast.LENGTH_SHORT).show();
+            }
+        });
 
 
 

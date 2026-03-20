@@ -11,6 +11,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
 
 
 public class custom_adapter_weak extends BaseAdapter{
@@ -41,7 +42,6 @@ public class custom_adapter_weak extends BaseAdapter{
 
     public View getView(int position, View convertView, ViewGroup parent) {
 
-
         convertView = inflater.inflate(R.layout.custom_spinner_layout, parent, false);
         TextView textView = convertView.findViewById(R.id.textView);
         textView.setText(subjects[position]);
@@ -49,8 +49,30 @@ public class custom_adapter_weak extends BaseAdapter{
         switch1.setChecked(isCheckedArr[position]);
 
 
-        return convertView;
+        String subjectName = subjects[position];
+        textView.setText(subjectName);
 
+        // חשוב: מסירים מאזין קודם כדי למנוע באגים בזמן גלילה
+        switch1.setOnCheckedChangeListener(null);
+        switch1.setChecked(isCheckedArr[position]);
+
+        // הוספת המאזין החדש
+        switch1.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // 1. עדכון המערך המקומי בפרגמנט
+            isCheckedArr[position] = isChecked;
+
+            // 2. עדכון ה-Firebase
+            String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+            // כאן את בוחרת אם זה weakSubjects או strongSubjects לפי שם האדפטר
+            FirebaseDatabase.getInstance().getReference("Users")
+                    .child(userId)
+                    .child("weakSubjects") // או strongSubjects במחלקה השנייה
+                    .child(subjectName)
+                    .setValue(isChecked);
+        });
+
+        return convertView;
 
 
     }

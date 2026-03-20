@@ -1,5 +1,6 @@
 package com.example.proj;
 
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -25,18 +26,18 @@ public class Users {
         this.userName = "";
         this.bio = "";
         this.profilePicUrl = "";
-        this.weakSubjects = Map.of(
-                "History", false,
-                "Math", false,
-                "English", false,
-                "Science", false
-        );
-        this.strongSubjects = Map.of(
-                "History", false,
-                "Math", false,
-                "English", false,
-                "Science", false
-        );
 
+        // שימוש ב-HashMap כדי שהמפה תהיה ניתנת לשינוי
+        this.weakSubjects = new HashMap<>();
+        this.weakSubjects.put("History", false);
+        this.weakSubjects.put("Math", false);
+        this.weakSubjects.put("English", false);
+        this.weakSubjects.put("Science", false);
+
+        this.strongSubjects = new HashMap<>();
+        this.strongSubjects.put("History", false);
+        this.strongSubjects.put("Math", false);
+        this.strongSubjects.put("English", false);
+        this.strongSubjects.put("Science", false);
     }
 }

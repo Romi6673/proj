@@ -25,7 +25,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Proj">
         <activity
-            android:name=".chatRequest"
+            android:name=".chatsRequestActivity"
             android:exported="false" />
         <activity
             android:name=".LoginActivity"

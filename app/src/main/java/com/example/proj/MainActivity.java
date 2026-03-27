@@ -3,9 +3,12 @@ package com.example.proj;
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.example.proj.databinding.ActivityMainBinding;
@@ -30,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
     Button bioEditBtn;
 
 
-
     @SuppressLint("NonConstantResourceId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +44,6 @@ public class MainActivity extends AppCompatActivity {
         strongSubSpinner = findViewById(R.id.strongSubSpinner);
         //userNameEditBtn = findViewById(R.id.userNameEditBtn);
         bioEditBtn = findViewById(R.id.saveBioBtn);
-
 
 
         binding.bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -72,10 +73,32 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void replace_fragment(Fragment fragment){
+    private void replace_fragment(Fragment fragment) {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.replace(R.id.framelayout, fragment);
         fragmentTransaction.commit();
     }
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        String id = item.getTitle().toString();
+        if (id.equals("requests")) {
+            Intent intent = new Intent(this, chatsRequestActivity.class);
+            startActivity(intent);
+
+            return super.onOptionsItemSelected(item);
+        }else{
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            return super.onOptionsItemSelected(item);
+        }
+
+    }
+
 }

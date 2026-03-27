@@ -1,6 +1,9 @@
 package com.example.proj;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ListView;
 
 import androidx.annotation.NonNull;
@@ -56,4 +59,28 @@ public class chatsRequestActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
+
+
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        String id = item.getTitle().toString();
+        if (id.equals("requests")) {
+            Intent intent = new Intent(this, chatsRequestActivity.class);
+            startActivity(intent);
+
+            return super.onOptionsItemSelected(item);
+        }else{
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            return super.onOptionsItemSelected(item);
+        }
+
+    }
+
 }

@@ -229,11 +229,13 @@ public class ProfileFragment extends Fragment {
                     tvUsername.setText(u.userName);
                     bioEditText.setText(u.bio);
 
-                    // 2. טעינת תמונת פרופיל עם Glide
-                    if (u.profilePicUrl != null && !u.profilePicUrl.isEmpty()) {
-                        Glide.with(getContext())
-                                .load(u.profilePicUrl)
-                                .into(profilePictureBtn);
+// בדיקה שהפרגמנט מחובר ואינו בתהליך השמדה
+                    if (isAdded() && getContext() != null && !isDetached()) {
+                        if (u.profilePicUrl != null && !u.profilePicUrl.isEmpty()) {
+                            Glide.with(getContext())
+                                    .load(u.profilePicUrl)
+                                    .into(profilePictureBtn);
+                        }
                     }
 
                     // 3. עדכון מערך המקצועות החלשים (Weak Subjects)

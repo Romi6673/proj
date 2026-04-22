@@ -64,6 +64,7 @@ public class ProfileFragment extends Fragment {
     ImageButton profilePictureBtn;
     Spinner weakSubSpinner;
     Spinner strongSubSpinner;
+    TextView tvScore;
     String nameStr;
     String bioStr;
     LinearLayout dialog_username;
@@ -228,6 +229,7 @@ public class ProfileFragment extends Fragment {
                     // 1. עדכון פרטים כלליים
                     tvUsername.setText(u.userName);
                     bioEditText.setText(u.bio);
+                    tvScore.setText("Score: " + u.score);
 
 // בדיקה שהפרגמנט מחובר ואינו בתהליך השמדה
                     if (isAdded() && getContext() != null && !isDetached()) {

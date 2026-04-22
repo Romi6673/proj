@@ -1,85 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#F0F4F8"
+    android:gravity="center"
+    android:orientation="horizontal"
     tools:context=".AiChatActivity">
 
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="5" />
+
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical">
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="90"
+        android:orientation="vertical">
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5" />
 
         <TextView
-            android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="‹ Back"
-            android:textColor="#90A4AE"
-            android:textSize="18sp"
-            android:padding="8dp" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:text="Magic AI"
             android:gravity="center"
-            android:textSize="18sp"
-            android:textColor="#455A64"
-            android:fontFamily="sans-serif-medium" />
+            android:text="Ask Gemini"
+            android:textSize="24sp"
+            android:textStyle="bold" />
 
-        <View
-            android:layout_width="48dp"
-            android:layout_height="0dp" />
-    </LinearLayout>
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-    <ListView
-        android:id="@+id/chatListView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="@null"
-        android:padding="16dp"
-        android:clipToPadding="false"
-        android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll" />
+        <TextView
+            android:id="@+id/textViewChat"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="9"
+            android:gravity="bottom"
+            android:scrollbars="vertical"
+            android:textDirection="rtl"
+            android:textSize="14sp"
+            android:verticalScrollbarPosition="defaultPosition" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="#FFFFFF"
-        android:gravity="center_vertical"
-        android:elevation="4dp">
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.5" />
 
-        <EditText
-            android:id="@+id/etMessage"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginHorizontal="8dp"
-            android:hint="Type a message..."
-            android:background="@android:color/transparent"
-            android:padding="10dp"
-            android:maxLines="4"
-            android:textSize="16sp" />
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btnSend"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:backgroundTint="#E3F2FD"
-            android:src="@android:drawable/ic_menu_send"
-            android:tint="#2196F3"
-            android:contentDescription="Send" />
+            <EditText
+                android:id="@+id/eTUserInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="הקלד..."
+                android:inputType="text" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="sendUserInput"
+                android:text="שלח" />
+
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
     </LinearLayout>
+
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="5" />
 
 </LinearLayout>

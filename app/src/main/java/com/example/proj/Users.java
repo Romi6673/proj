@@ -12,6 +12,7 @@ public class Users {
     public String userName;
     public String bio;
     public String profilePicUrl;
+    public int score;
 
     public Map<String, Boolean> weakSubjects;
     public Map<String, Boolean> strongSubjects;
@@ -19,13 +20,14 @@ public class Users {
     public Users() {
     }
 
-    public Users(String email, String password, String userId) {
+    public Users(String email, String password, String userId ) {
         this.email = email;
         this.password = password;
         this.userId = userId;
         this.userName = "";
-        this.bio = "";
+        this.bio = "no bio yet";
         this.profilePicUrl = "";
+        this.score = 10;
 
         // שימוש ב-HashMap כדי שהמפה תהיה ניתנת לשינוי
         this.weakSubjects = new HashMap<>();
@@ -39,5 +41,9 @@ public class Users {
         this.strongSubjects.put("Math", false);
         this.strongSubjects.put("English", false);
         this.strongSubjects.put("Science", false);
+    }
+
+    public void setScore(int score){
+        this.score = score;
     }
 }

@@ -5,8 +5,10 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -48,6 +50,7 @@ public class chatsRequestActivity extends AppCompatActivity {
                     if (req != null && req.status == 0) {
                         requestList.add(req);
                     }
+
                 }
 
                 // עדכון האדפטר (שיניתי אותו קצת שיקבל רשימת אובייקטים)
@@ -57,6 +60,34 @@ public class chatsRequestActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    public void addPointsToUser(String userId, int points) {
+        DatabaseReference userRef = FirebaseDatabase.getInstance()
+                .getReference("Users")
+                .child(userId)
+                .child("score");
+
+        userRef.runTransaction(new com.google.firebase.database.Transaction.Handler() {
+            @NonNull
+            @Override
+            public com.google.firebase.database.Transaction.Result doTransaction(@NonNull com.google.firebase.database.MutableData mutableData) {
+                Integer currentScore = mutableData.getValue(Integer.class);
+                if (currentScore == null) {
+                    mutableData.setValue(points);
+                } else {
+                    mutableData.setValue(currentScore + points);
+                }
+                return com.google.firebase.database.Transaction.success(mutableData);
+            }
+
+            @Override
+            public void onComplete(@Nullable com.google.firebase.database.DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                if (committed) {
+
+                }
+            }
         });
     }
 

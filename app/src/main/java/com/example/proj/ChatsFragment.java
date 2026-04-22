@@ -26,11 +26,12 @@ public class ChatsFragment extends Fragment {
     ArrayList<ChatRoom> myRooms;
     ChatListAdapter adapter; // האדפטר החדש
     String myId;
+    Button aiChatBtn;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
-
+        aiChatBtn = view.findViewById(R.id.aiChatBtn);
         chatsListView = view.findViewById(R.id.chatsListView);
         myRooms = new ArrayList<>();
         myId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -47,6 +48,17 @@ public class ChatsFragment extends Fragment {
             intent.putExtra("roomId", selected.roomId);
             startActivity(intent);
         });
+
+        // 3. הגדרת מאזין ללחיצה (OnClickListener)
+        aiChatBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // מעבר למסך ה-AI
+                Intent intent = new Intent(getActivity(), AiChatActivity.class);
+                startActivity(intent);
+            }
+        });
+
 
         return view;
     }
@@ -70,4 +82,6 @@ public class ChatsFragment extends Fragment {
             public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
+
+
 }

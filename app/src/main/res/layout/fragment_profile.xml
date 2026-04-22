@@ -60,10 +60,10 @@
 
                 <TextView
                     android:id="@+id/tvScore"
-                    android:layout_width="wrap_content"
+                    android:layout_width="191dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Score: 1,250"
+                    android:text="Score: "
                     android:textColor="#FF9800"
                     android:textSize="18sp"
                     android:textStyle="bold" />

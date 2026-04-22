@@ -91,6 +91,11 @@ public class custom_lv_request_adapter extends BaseAdapter {
         reqRef.child("status").setValue(newStatus).addOnSuccessListener(unused -> {
             if (newStatus == 2) {
                 createChatRoom(req);
+
+                // השורה החדשה שלנו: מוסיפה נקודות למורה (toUserId)
+                if (context instanceof chatsRequestActivity) {
+                    ((chatsRequestActivity) context).addPointsToUser(req.toUserId, 50);
+                }
             }
         });
     }

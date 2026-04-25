@@ -25,6 +25,7 @@ public class custom_lv_request_adapter extends BaseAdapter {
     ArrayList<chatRequest> requests;
     private LayoutInflater inflater;
 
+
     public custom_lv_request_adapter(Context context, ArrayList<chatRequest> requests) {
         this.context = context;
         this.requests = requests;
@@ -92,7 +93,8 @@ public class custom_lv_request_adapter extends BaseAdapter {
             if (newStatus == 2) {
                 createChatRoom(req);
 
-                // השורה החדשה שלנו: מוסיפה נקודות למורה (toUserId)
+                // בדיקה האם הcontext הוא במסך של בקשות צאט כדי שיהיה אפשרי לעשות לו
+                // המרה ולהפעיל עליו פונקציה של הchatRequestActivity
                 if (context instanceof chatsRequestActivity) {
                     ((chatsRequestActivity) context).addPointsToUser(req.toUserId, 50);
                 }
@@ -104,19 +106,21 @@ public class custom_lv_request_adapter extends BaseAdapter {
         DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("ChatRooms");
         String roomId = chatRef.push().getKey(); // יצירת מזהה לצ'אט
 
-        ChatRoom newRoom = new ChatRoom(roomId, req.toUserId, req.fromUserId); // המקבל הופך למדריך
+        ChatRoom newRoom = new ChatRoom(roomId, req.toUserId, req.fromUserId , req.subject); // המקבל הופך למדריך
 
         chatRef.child(roomId).setValue(newRoom).addOnSuccessListener(unused -> {
-            // עדכון רשימת הצאטים אצל המדריך (המשתמש הנוכחי)
+            // הוספת חדר חדש תחת הענף chatrooms
             DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users")
                     .child(req.toUserId).child("myGuideChats");
 
             userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                //המאזין מאזין לתקייה myGuidedChats כי לשם מצביע userRef
+
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    ArrayList<String> chats = new ArrayList<>();
-                    if (snapshot.exists()) {
-                        for (DataSnapshot ds : snapshot.getChildren()) chats.add(ds.getValue(String.class));
+                    ArrayList<String> chats = new ArrayList<>(); // רשימת הצאטים לפני הוספת הצאט החדש
+                    if (snapshot.exists()) { // בדיקה האם קיים myGuidedChats
+                        for (DataSnapshot ds : snapshot.getChildren()) chats.add(ds.getValue(String.class));// הוספת הצאטים הקיימים לרשימת הצאטים
                     }
                     if (!chats.contains(roomId)) {
                         chats.add(roomId);

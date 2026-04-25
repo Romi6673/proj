@@ -1,25 +1,41 @@
-<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="110dp"
+    android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical">
+    android:padding="12dp">
 
     <ImageView
         android:id="@+id/ivOtherUser"
-        android:layout_width="55dp"
-        android:layout_height="55dp"
-        android:src="@drawable/outline_account_circle_24"
-        android:scaleType="centerCrop" />
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/outline_account_circle_24" />
 
-    <TextView
-        android:id="@+id/tvChatUserName"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:layout_marginStart="16dp"
-        android:text="User Name"
-        android:textColor="#2C3E50"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvChatUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="User Name"
+            android:textColor="#2C3E50"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvSubjectChat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Subject"
+            android:textColor="#7F8C8D"
+            android:textSize="14sp" />
+    </LinearLayout>
+
 </LinearLayout>

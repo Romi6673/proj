@@ -45,7 +45,8 @@ public class chatsRequestActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 requestList.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    chatRequest req = ds.getValue(chatRequest.class);
+                    //לעבור על כל בקשה שנשלחה עבור המשתמש המחובר
+                    chatRequest req = ds.getValue(chatRequest.class);//להפוך את הבקשה לעצם java
                     // נציג רק בקשות שממתינות (status == 0)
                     if (req != null && req.status == 0) {
                         requestList.add(req);
@@ -53,7 +54,6 @@ public class chatsRequestActivity extends AppCompatActivity {
 
                 }
 
-                // עדכון האדפטר (שיניתי אותו קצת שיקבל רשימת אובייקטים)
                 adapter = new custom_lv_request_adapter(chatsRequestActivity.this, requestList);
                 lvFollowRequests.setAdapter(adapter);
             }
@@ -74,6 +74,7 @@ public class chatsRequestActivity extends AppCompatActivity {
             @Override
             public com.google.firebase.database.Transaction.Result doTransaction(@NonNull com.google.firebase.database.MutableData mutableData) {
                 Integer currentScore = mutableData.getValue(Integer.class);
+                //משתמשים בInteger בגלל שהוא אובייקט ויכול להכיל null במידה וmutabledata הוא null
                 if (currentScore == null) {
                     mutableData.setValue(points);
                 } else {
@@ -84,9 +85,7 @@ public class chatsRequestActivity extends AppCompatActivity {
 
             @Override
             public void onComplete(@Nullable com.google.firebase.database.DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
-                if (committed) {
 
-                }
             }
         });
     }

@@ -43,7 +43,5 @@ public class Users {
         this.strongSubjects.put("Science", false);
     }
 
-    public void setScore(int score){
-        this.score = score;
-    }
+
 }

@@ -16,8 +16,17 @@ public class GeminiManager {
     private GenerativeModel gemini;
 
     private GeminiManager (){
-        gemini = new GenerativeModel("gemini-2.0-flash",
+        gemini = new GenerativeModel("gemini-2.5-flash",
                 BuildConfig.GEMINI_API_KEY);
+    }
+
+    public static GeminiManager getInstance(){
+        if (instance == null) {
+            instance = new GeminiManager();
+        }
+
+        return instance;
+
     }
 
 }

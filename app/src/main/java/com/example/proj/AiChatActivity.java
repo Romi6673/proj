@@ -46,17 +46,14 @@ public class AiChatActivity extends AppCompatActivity {
     }
 
     public void sendUserInput(View view) {
-        InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        //InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        //imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         String userInput = eTUserInput.getText().toString();
         if (userInput.isEmpty()) {
             Toast.makeText(this, "Please enter your answer", Toast.LENGTH_LONG).show();
             return;
         } else {
-            SpannableString spanString = new SpannableString("\n" + "תשובתך:" + "\n" + userInput + "\n");
-            spanString.setSpan(new StyleSpan(Typeface.BOLD), 0, spanString.length(), 0);
-            spanString.setSpan(new StyleSpan(Typeface.ITALIC), 0, spanString.length(), 0);
-            textViewChat.append(spanString);
+            textViewChat.append("\n" + "you:" + "\n" + userInput + "\n");
             eTUserInput.setText("");
             processUserInput(userInput);
         }
@@ -71,9 +68,11 @@ public class AiChatActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Throwable error) {
-                textViewChat.append("\nשגיאה " + error.getMessage() + "\n");
-
+            public void onFailure(Throwable throwable) {
+                runOnUiThread(() -> {
+                    textViewChat.append("Sorry , the server is in high demand ." +
+                            "come back in a minute");
+                });
             }
         });
     }

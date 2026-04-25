@@ -141,13 +141,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    // פונקציה שבודקת האם הפרופיל מושלם לפי המודל שלך
+    // פונקציה שבודקת האם הפרופיל "הושלם"
     private boolean isProfileComplete(Users user) {
         // בדיקה שכל השדות שדרשת קיימים ולא ריקים
         return user != null &&
-                user.userName != null && !user.userName.isEmpty() &&
-                user.strongSubjects != null && !user.strongSubjects.isEmpty() &&
-                user.weakSubjects != null && !user.weakSubjects.isEmpty();
+                user.userName != null && !user.userName.isEmpty() ;
+
     }
 
     private void checkUserProfileStatus() {
@@ -159,13 +158,18 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // אם המשתמש בכלל לא קיים ב-Database (משתמש חדש לגמרי)
                 if (!snapshot.exists()) {
+                    Toast.makeText(MainActivity.this, "Please enter a user name by clicking edit profile", Toast.LENGTH_LONG).show();
+
                     lockNavigation(); // פונקציה שתעביר לפרגמנט פרופיל
+
                     return;
                 }
 
                 Users myUser = snapshot.getValue(Users.class);
 
                 if (myUser == null || !isProfileComplete(myUser)) {
+                    Toast.makeText(MainActivity.this, "Please enter a user name by clicking edit profile", Toast.LENGTH_LONG).show();
+
                     lockNavigation();
                 } else {
                     // הפרופיל מושלם - מציגים תפריט

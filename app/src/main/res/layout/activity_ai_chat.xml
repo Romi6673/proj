@@ -30,7 +30,8 @@
             android:layout_height="0dp"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Ask Gemini"
+            android:text="Ask Joe"
+            android:textColor="#68B8B4"
             android:textSize="24sp"
             android:textStyle="bold" />
 
@@ -66,14 +67,15 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:hint="הקלד..."
+                android:hint="Type here..."
                 android:inputType="text" />
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:backgroundTint="#80D5DE"
                 android:onClick="sendUserInput"
-                android:text="שלח" />
+                android:text="send" />
 
         </LinearLayout>
 

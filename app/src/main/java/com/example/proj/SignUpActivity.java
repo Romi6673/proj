@@ -133,7 +133,6 @@ public class SignUpActivity extends AppCompatActivity {
                         if (firebaseUser != null) {
                             String uid = firebaseUser.getUid();
 
-                            // 2. יצירת אובייקט המשתמש (השתמשי ב-HashMap במקום Map.of כדי לאפשר עדכון בהמשך)
                             Users newUser = new Users(email, password, uid);
 
                             // 3. שמירה ב-Database תחת ה-UID שלו

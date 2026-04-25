@@ -1,6 +1,7 @@
 package com.example.proj;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -59,26 +60,17 @@ public class Custom_Listview_users extends BaseAdapter {
 
         ImageView ivUserProfile = convertView.findViewById(R.id.ivUserProfile);
         TextView tvUserNameSearch = convertView.findViewById(R.id.tvUserNameSearch);
-        TextView tvUserSubject = convertView.findViewById(R.id.tvUserSubject);
+        TextView tvUserSubject = convertView.findViewById(R.id.tvUserSubject); // נשתמש באותו ID אבל נציג בו ניקוד
         Button btnSendChatRequestBtn = convertView.findViewById(R.id.btnSendChatRequestBtn);
 
         Users user = userList.get(i);
 
         tvUserNameSearch.setText(user.userName);
 
-        // נציג למשל את המקצוע הראשון שהוא חזק בו מתוך הרשימה
-        String topSubject = "No specific subject";
-        if (user.strongSubjects != null) {
-            for (Map.Entry<String, Boolean> entry : user.strongSubjects.entrySet()) {
-                if (entry.getValue()) {
-                    topSubject = entry.getKey();
-                    break;
-                }
-            }
-        }
-        tvUserSubject.setText("Strong in: " + topSubject);
+        // עדכון: הצגת ניקוד במקום מקצוע
+        tvUserSubject.setText("Score: " + user.score);
 
-        // טעינת תמונה עם Glide
+        // טעינת תמונה עם Glide (כפי שכבר עשית)
         if (user.profilePicUrl != null && !user.profilePicUrl.isEmpty()) {
             Glide.with(context).load(user.profilePicUrl).into(ivUserProfile);
         } else {

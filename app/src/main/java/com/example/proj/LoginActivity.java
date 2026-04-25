@@ -1,6 +1,7 @@
 package com.example.proj;
 
-import android.content.Intent;
+import
+        android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
@@ -93,7 +94,7 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText emailEditText;
     EditText passwordEditText;
-
+    Button btnSignIn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,8 +102,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
         emailEditText = findViewById(R.id.emailEditText);
         passwordEditText = findViewById(R.id.passwordEditText);
-        // חיבור ידני של הכפתור
-        MaterialButton btnSignIn = findViewById(R.id.btnSignIn);
+        btnSignIn = findViewById(R.id.btnSignIn);
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -150,7 +150,9 @@ public class LoginActivity extends AppCompatActivity {
     // פונקציית עזר לשמירת סטטוס התחברות
     private void updateLoginStatus() {
         SharedPreferences preferences = getSharedPreferences("PREFERENCE", MODE_PRIVATE);
+        //creating a doc on this phone that only the app can write and read
         SharedPreferences.Editor editor = preferences.edit();
+        //the editor is a "tool" to write into the doc "preferences"
         editor.putString("FirstTimeInstall", "Yes");
         editor.apply();
     }

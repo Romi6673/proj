@@ -65,8 +65,6 @@ public class ProfileFragment extends Fragment {
     Spinner weakSubSpinner;
     Spinner strongSubSpinner;
     TextView tvScore;
-    String nameStr;
-    String bioStr;
     LinearLayout dialog_username;
     private static final int PICK_IMAGE_REQUEST = 1;
     private static final int REQUEST_READ_STORAGE = 2000;
@@ -97,9 +95,13 @@ public class ProfileFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        // callback function - gets called when the user picked a picture from the gallery
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == getActivity().RESULT_OK && data != null && data.getData() != null) {
+        if (requestCode == PICK_IMAGE_REQUEST   // בודקת שהאפליקציה קיבלה תשובה מה*גלריה* ולא בחר למשל קובץ pdf
+                && resultCode == getActivity().RESULT_OK && data != null && data.getData() != null) { // בודקת שבאמת נבחרה תמונה ושהחבילה (data) לא ריקה
+
+
             selectedImageUri = data.getData();
 
             // הצגת התמונה בכפתור מיד (לפני ההעלאה, בשביל חווית משתמש טובה)
@@ -159,7 +161,6 @@ public class ProfileFragment extends Fragment {
 
 
     public void checkPermissionAndOpenGallery() {
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_READ_STORAGE);
@@ -184,9 +185,15 @@ public class ProfileFragment extends Fragment {
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         } else {
-            // כאן כדאי להחזיר את המשתמש למסך התחברות אם הוא לא מחובר
+            Intent intent = new Intent(getActivity(), LoginActivity.class);
+            startActivity(intent);
+
+            // 2. סגירת האקטיביטי הנוכחית כדי שהוא לא יוכל לחזור אחורה לפרופיל
+            getActivity().finish();
+
             return view;
         }
+
         userNameEditBtn = view.findViewById(R.id.userNameEditBtn);
         profilePictureBtn = view.findViewById(R.id.profilePictureBtn);
         TextView tvUsername = view.findViewById(R.id.tvUsername);
@@ -231,7 +238,7 @@ public class ProfileFragment extends Fragment {
                     bioEditText.setText(u.bio);
                     tvScore.setText("Score: " + u.score);
 
-// בדיקה שהפרגמנט מחובר ואינו בתהליך השמדה
+                    //נשתמש בglide כדי לעלות את הקבצים לתצוגה מהענן
                     if (isAdded() && getContext() != null && !isDetached()) {
                         if (u.profilePicUrl != null && !u.profilePicUrl.isEmpty()) {
                             Glide.with(getContext())
@@ -244,10 +251,10 @@ public class ProfileFragment extends Fragment {
                     if (u.weakSubjects != null) {
                         for (int i = 0; i < subjectsWeakArr.length; i++) {
                             Boolean isSelected = u.weakSubjects.get(subjectsWeakArr[i]);
-                            // אם הערך קיים ב-Map, נשים אותו במערך, אחרת false
                             subjectsWeakBool[i] = (isSelected != null && isSelected);
                         }
-                        // עדכון האדפטר של הספינר החלש
+
+                        //קריאת נתונים מהענן ושינוי מצב האדפטר ככה שבפעם הבאה שהאפליקציה עולה הswitchים המתאימים יהיו דלוקים
                         if (weakSubSpinner.getAdapter() != null) {
                             ((custom_adapter_weak) weakSubSpinner.getAdapter()).notifyDataSetChanged();
                         }
@@ -259,7 +266,7 @@ public class ProfileFragment extends Fragment {
                             Boolean isSelected = u.strongSubjects.get(subjectsStrongArr[i]);
                             subjectsStrongBool[i] = (isSelected != null && isSelected);
                         }
-                        // עדכון האדפטר של הספינר החזק
+                        //קריאת נתונים מהענן ושינוי מצב האדפטר ככה שבפעם הבאה שהאפליקציה עולה הswitchים המתאימים יהיו דלוקים
                         if (strongSubSpinner.getAdapter() != null) {
                             ((custom_adapter_strong) strongSubSpinner.getAdapter()).notifyDataSetChanged();
                         }
@@ -291,12 +298,16 @@ public class ProfileFragment extends Fragment {
                     .setValue(newUserName);
 
             ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
+            //משום שבכל פעם שמגדירים new alertdialog.builder אז בפעם השניה שמעלים את הדיאלוג הview זוכר את
+            // הבונה הקודם לכן מנתקים את הקישור כדי שיווצר מחדש ללא בעיות
         });
 
         userNameEditBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (dialog_username.getParent() != null) {
+                    //השורה מופיעה שוב למקרה ומישהו לא לחץ על הsave אחרי
+                    // הדיאלוג , אלא על המסך ואז הקשר לא התנתק
                     ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
                 }
                 adb.show();

@@ -66,6 +66,8 @@ public class SearchFragment extends Fragment {
 
                 if (currentUser != null && currentUser.weakSubjects != null) {
                     for (Map.Entry<String, Boolean> entry : currentUser.weakSubjects.entrySet()) {
+                        // עוברים רק על מפת המקצועות החלשים וentry הוא משתנה שהגדרנו כדי כל פעם
+                        // לעבור איתו על מפת המקצועות החלשים
                         if (entry.getValue()) { // רק מקצועות שסומנו כחלשים (true)
                             myWeakSubjectsList.add(entry.getKey());
                         }
@@ -94,21 +96,27 @@ public class SearchFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 suggestedUsers.clear();
                 for (DataSnapshot userSnap : snapshot.getChildren()) {
-                    Users otherUser = userSnap.getValue(Users.class);
+                    Users otherUser = userSnap.getValue(Users.class); // המשתמש במקום הנוכחי בלולאה
 
-                    // סינון: לא אני + הוא חזק במקצוע שנבחר בספינר
                     if (otherUser != null && !otherUser.userId.equals(currentUserId)) {
                         if (otherUser.strongSubjects != null &&
                                 otherUser.strongSubjects.containsKey(subject) &&
                                 otherUser.strongSubjects.get(subject)) {
+                            //סינון שהמשתמש הוא לא המשתמש המחובר, הוא לא null רשימת
+                            // המקצועות החזקים שלו מכילה את המקצוע שמסונן והערך שלו בmap הוא true
 
                             suggestedUsers.add(otherUser);
                         }
                     }
                 }
-                // עדכון ה-ListView
-                adapter = new Custom_Listview_users(getContext(), suggestedUsers);
-                userListView.setAdapter(adapter);
+
+                // 1. בודקים שהפרגמנט עדיין מחובר (isAdded)
+                // 2. בודקים שהקונטקסט לא null
+                if (isAdded() && getContext() != null) {
+                    adapter = new Custom_Listview_users(getContext(), suggestedUsers);
+                    userListView.setAdapter(adapter);
+                }
+                // --------------------------
             }
 
             @Override

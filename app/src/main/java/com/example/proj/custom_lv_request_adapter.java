@@ -102,34 +102,49 @@ public class custom_lv_request_adapter extends BaseAdapter {
         });
     }
 
+
+
     private void createChatRoom(chatRequest req) {
-        DatabaseReference chatRef = FirebaseDatabase.getInstance().getReference("ChatRooms");
-        String roomId = chatRef.push().getKey(); // יצירת מזהה לצ'אט
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference();
+        String roomId = rootRef.child("ChatRooms").push().getKey();
+        //פנייה לענף chatroom ויצירת מזהה ייחודי חדש עבור חדר חדש.
 
-        ChatRoom newRoom = new ChatRoom(roomId, req.toUserId, req.fromUserId , req.subject); // המקבל הופך למדריך
+        // יצירת אובייקט החדר
+        ChatRoom newRoom = new ChatRoom(roomId, req.toUserId, req.fromUserId, req.subject);
 
-        chatRef.child(roomId).setValue(newRoom).addOnSuccessListener(unused -> {
-            // הוספת חדר חדש תחת הענף chatrooms
-            DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("Users")
-                    .child(req.toUserId).child("myGuideChats");
+        // 1. שמירת החדר בענף הכללי ChatRooms
+        rootRef.child("ChatRooms").child(roomId).setValue(newRoom).addOnSuccessListener(unused -> {
 
-            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                //המאזין מאזין לתקייה myGuidedChats כי לשם מצביע userRef
+            // 2. עדכון הרשימה של הmychats אצל המדריך (זה שאישר את הבקשה - toUserId)
+            addRoomToUserList(req.toUserId, roomId);
 
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    ArrayList<String> chats = new ArrayList<>(); // רשימת הצאטים לפני הוספת הצאט החדש
-                    if (snapshot.exists()) { // בדיקה האם קיים myGuidedChats
-                        for (DataSnapshot ds : snapshot.getChildren()) chats.add(ds.getValue(String.class));// הוספת הצאטים הקיימים לרשימת הצאטים
-                    }
-                    if (!chats.contains(roomId)) {
-                        chats.add(roomId);
-                        userRef.setValue(chats);
+            // 3. עדכון הרשימה של הmychats אצל התלמיד (זה ששלח את הבקשה - fromUserId)
+            addRoomToUserList(req.fromUserId, roomId);
+        });
+    }
+
+    // פונקציית עזר כללית שמעדכנת את רשימת הצ'אטים של משתמש ספציפי
+    private void addRoomToUserList(String userId, String roomId) {
+        DatabaseReference userChatsRef = FirebaseDatabase.getInstance().getReference("Users")
+                .child(userId).child("myChatRooms"); // השם הגנרי החדש שביקשת
+
+        userChatsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                ArrayList<String> chats = new ArrayList<>();
+                if (snapshot.exists()) {
+                    for (DataSnapshot ds : snapshot.getChildren()) {
+                        chats.add(ds.getValue(String.class));
                     }
                 }
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {}
-            });
+                if (!chats.contains(roomId)) {
+                    chats.add(roomId);
+                    userChatsRef.setValue(chats);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
 }

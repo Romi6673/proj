@@ -10,7 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="150dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -53,7 +56,7 @@
                     android:backgroundTint="#4FB3C3"
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
-                    android:text="Edit Profile"
+                    android:text="Edit username"
                     android:textAllCaps="false"
                     android:textSize="20sp"
                     app:cornerRadius="18dp" />

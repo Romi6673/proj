@@ -63,21 +63,21 @@ public class Custom_Listview_users extends BaseAdapter {
         TextView tvUserSubject = convertView.findViewById(R.id.tvUserSubject); // נשתמש באותו ID אבל נציג בו ניקוד
         Button btnSendChatRequestBtn = convertView.findViewById(R.id.btnSendChatRequestBtn);
 
-        Users user = userList.get(i);
+        Users user = userList.get(i);//עבור משתמש במיקום i ברשימה , כך נעבור על כל משתמש
 
         tvUserNameSearch.setText(user.userName);
 
-        // עדכון: הצגת ניקוד במקום מקצוע
+        // הצגת הניקוד של המשתמש
         tvUserSubject.setText("Score: " + user.score);
 
-        // טעינת תמונה עם Glide (כפי שכבר עשית)
+        // טעינת תמונה עם Glide
         if (user.profilePicUrl != null && !user.profilePicUrl.isEmpty()) {
             Glide.with(context).load(user.profilePicUrl).into(ivUserProfile);
         } else {
             ivUserProfile.setImageResource(R.drawable.outline_account_circle_24);
         }
 
-        // בתוך ה-getView של Custom_Listview_users
+        //מופעל לאחר לחיצה על chat עם משתמש
         btnSendChatRequestBtn.setOnClickListener(v -> {
             String fromId = FirebaseAuth.getInstance().getCurrentUser().getUid();
             String toId = user.userId; // המשתמש שמופיע בשורה הזו
@@ -89,6 +89,7 @@ public class Custom_Listview_users extends BaseAdapter {
             chatRequest newRequest = new chatRequest(requestId, fromId, "Someone", toId, "Math", 0);
 
             ref.child(requestId).setValue(newRequest).addOnCompleteListener(task -> {
+                //האזנה לפעולה של הוספת הבקשה החדשה לענף הבקשות
                 if (task.isSuccessful()) {
                     Toast.makeText(context, "Request Sent!", Toast.LENGTH_SHORT).show();
                     btnSendChatRequestBtn.setEnabled(false); // מניעת שליחה כפולה

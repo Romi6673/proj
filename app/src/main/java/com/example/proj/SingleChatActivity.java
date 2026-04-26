@@ -66,6 +66,7 @@ public class SingleChatActivity extends AppCompatActivity {
         loadMessages();
 
         btnSend.setOnClickListener(v -> {
+            //לאחר לחיצה על כפתור השליחה
             String text = etMessage.getText().toString().trim();
             if (!text.isEmpty()) {
                 sendMessage(text);
@@ -74,6 +75,8 @@ public class SingleChatActivity extends AppCompatActivity {
         });
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            //בודקים אם המכשיר הוא בגרסת אנדרואיד 13 ומעלה כי רק מגרסה זו צריך
+            // לבקש אישור לשליחת התראות וגם בודקים אם האישור הזה נשלח בעבר
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
@@ -92,7 +95,7 @@ public class SingleChatActivity extends AppCompatActivity {
                         for (DataSnapshot ds : snapshot.getChildren()) {
                             Message msg = ds.getValue(Message.class);
                             if (msg != null) {
-                                messageList.add(msg);
+                                messageList.add(msg);//יצירת רשימה Arraylist של כל ההודעות
                                 lastMessage = msg; // בסוף הלולאה, זה יהיה המסר הכי חדש
                             }
                         }
@@ -104,7 +107,7 @@ public class SingleChatActivity extends AppCompatActivity {
                         // --- לוגיקת ההתראות ---
                         // בודקים: 1. האם יש הודעות? 2. האם ההודעה האחרונה היא לא ממני?
                         if (lastMessage != null && !lastMessage.senderId.equals(myId)) {
-                            showNotification("Partner", lastMessage.content);
+                            showNotification( lastMessage.content);//שליחת התראה עם ההודעה האחרונה
                         }
 
                         // גלילה אוטומטית לסוף הרשימה כשמגיעה הודעה
@@ -130,7 +133,7 @@ public class SingleChatActivity extends AppCompatActivity {
     };
 
 
-    private void showNotification(String sender, String message) {
+    private void showNotification( String message) {
         String channelId = "chat_notifications";
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
@@ -140,9 +143,11 @@ public class SingleChatActivity extends AppCompatActivity {
             manager.createNotificationChannel(channel);
         }
 
-        // מה יקרה כשילחצו על ההתראה
+        // מה יקרה כשילחצו על ההתראה , אם היא תלחץ אז יש אישור לפתוח את singlechatactivity
         Intent intent = new Intent(this, SingleChatActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+
 
         // בניית ההתראה
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
@@ -158,14 +163,15 @@ public class SingleChatActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // מאזינים לשינויים בסטטוס הקישוריות
+        //   סינון כדי להאזין רק לשינוי באינטרנט מופעל כשנכנסים למסך ולא
+        //   בדברים אחרים שמתרחשים באפליקציה
         registerReceiver(networkReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        // חשוב לבטל כדי לא לבזבז משאבים
+        // ההאזנה מתבטלת כשיוצאים ממנו כדי לחסוך במשאבים
         unregisterReceiver(networkReceiver);
     }
 

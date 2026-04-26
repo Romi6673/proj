@@ -48,7 +48,7 @@ public class ChatListAdapter extends BaseAdapter {
         TextView tvSubjectChat = view.findViewById(R.id.tvSubjectChat);
         TextView tvName = view.findViewById(R.id.tvChatUserName);
 
-        // זיהוי ה-ID של הצד השני
+
         String otherUserId = room.guideUserId.equals(myId) ? room.studentUserId : room.guideUserId;
         tvSubjectChat.setText(room.subject);
 

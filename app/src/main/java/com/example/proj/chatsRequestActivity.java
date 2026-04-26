@@ -45,21 +45,27 @@ public class chatsRequestActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 requestList.clear();
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    //לעבור על כל בקשה שנשלחה עבור המשתמש המחובר
-                    chatRequest req = ds.getValue(chatRequest.class);//להפוך את הבקשה לעצם java
+                    chatRequest req = ds.getValue(chatRequest.class);
                     // נציג רק בקשות שממתינות (status == 0)
                     if (req != null && req.status == 0) {
                         requestList.add(req);
                     }
-
                 }
 
+                // --- הבדיקה שהוספנו ---
+                if (requestList.isEmpty()) {
+                    Toast.makeText(chatsRequestActivity.this, "No pending requests at the moment", Toast.LENGTH_SHORT).show();
+                }
+
+                // עדכון האדפטר
                 adapter = new custom_lv_request_adapter(chatsRequestActivity.this, requestList);
                 lvFollowRequests.setAdapter(adapter);
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(chatsRequestActivity.this, "Error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

@@ -3,7 +3,7 @@ package com.example.proj;
 
 /**
  * The {@code GeminiCallback} interface defines a callback mechanism for receiving results
- * from asynchronous operations performed by the {@link GeminiManager}.
+ * from asynchronous operations performed by the {@link GeminiChatManager}.
  *
  * <p>
  *     <b>Remarks:</b>
@@ -12,7 +12,7 @@ package com.example.proj;
  *         <li>It provides two methods: {@link #onSuccess(String)} for successful operations and {@link #onFailure(Throwable)} for handling errors.</li>
  *         <li>The {@link #onSuccess(String)} method is called when the Gemini AI model successfully returns a text response.</li>
  *         <li>The {@link #onFailure(Throwable)} method is called when an error occurs during the interaction with the Gemini AI model.</li>
- *         <li>Implementations of this interface are typically used in classes that interact with the {@link GeminiManager}.</li>
+ *         <li>Implementations of this interface are typically used in classes that interact with the {@link GeminiChatManager}.</li>
  *         <li>This interface is used to handle asynchronous operations.</li>
  *     </ul>
  * </p>

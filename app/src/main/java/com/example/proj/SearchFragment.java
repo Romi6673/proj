@@ -12,6 +12,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -96,27 +97,27 @@ public class SearchFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 suggestedUsers.clear();
                 for (DataSnapshot userSnap : snapshot.getChildren()) {
-                    Users otherUser = userSnap.getValue(Users.class); // המשתמש במקום הנוכחי בלולאה
+                    Users otherUser = userSnap.getValue(Users.class);
 
                     if (otherUser != null && !otherUser.userId.equals(currentUserId)) {
                         if (otherUser.strongSubjects != null &&
                                 otherUser.strongSubjects.containsKey(subject) &&
                                 otherUser.strongSubjects.get(subject)) {
-                            //סינון שהמשתמש הוא לא המשתמש המחובר, הוא לא null רשימת
-                            // המקצועות החזקים שלו מכילה את המקצוע שמסונן והערך שלו בmap הוא true
 
                             suggestedUsers.add(otherUser);
                         }
                     }
                 }
 
-                // 1. בודקים שהפרגמנט עדיין מחובר (isAdded)
-                // 2. בודקים שהקונטקסט לא null
                 if (isAdded() && getContext() != null) {
+                    // --- הבדיקה שהוספנו ---
+                    if (suggestedUsers.isEmpty()) {
+                        Toast.makeText(getContext(), "No tutors found for " + subject, Toast.LENGTH_SHORT).show();
+                    }
+
                     adapter = new Custom_Listview_users(getContext(), suggestedUsers);
                     userListView.setAdapter(adapter);
                 }
-                // --------------------------
             }
 
             @Override

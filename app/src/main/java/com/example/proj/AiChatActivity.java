@@ -46,8 +46,8 @@ public class AiChatActivity extends AppCompatActivity {
     }
 
     public void sendUserInput(View view) {
-        //InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
-        //imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         String userInput = eTUserInput.getText().toString();
         if (userInput.isEmpty()) {
             Toast.makeText(this, "Please enter your answer", Toast.LENGTH_LONG).show();
@@ -70,8 +70,8 @@ public class AiChatActivity extends AppCompatActivity {
             @Override
             public void onFailure(Throwable throwable) {
                 runOnUiThread(() -> {
-                    textViewChat.append("Sorry , the server is in high demand ." +
-                            "come back in a minute");
+                    textViewChat.append("\n"+"joe:"+"Sorry , the server is in high demand ." +
+                            "come back in a minute"+"\n");
                 });
             }
         });

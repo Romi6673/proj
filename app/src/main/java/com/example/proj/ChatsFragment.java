@@ -23,76 +23,99 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+
+/**
+ * A fragment that displays a list of active chat rooms for the current user.
+ * It handles fetching chat IDs from the user's profile and then retrieving
+ * the full room details from the database.
+ */
 public class ChatsFragment extends Fragment {
+
+    /** ListView to display the list of chats. */
     ListView chatsListView;
+
+    /** List containing the ChatRoom objects to be displayed. */
     ArrayList<ChatRoom> myRooms;
-    ChatListAdapter adapter; // האדפטר החדש
+
+    /** Custom adapter for rendering ChatRoom objects in the ListView. */
+    ChatListAdapter adapter;
+
+    /** The unique ID of the currently authenticated user. */
     String myId;
+
+    /** Button to navigate to the AI Chat activity. */
     Button aiChatBtn;
 
+    /**
+     * Called to have the fragment instantiate its user interface view.
+     * Initializes UI components, the adapter, and sets up click listeners.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_chats, container, false);
+
         aiChatBtn = view.findViewById(R.id.aiChatBtn);
         chatsListView = view.findViewById(R.id.chatsListView);
         myRooms = new ArrayList<>();
         myId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // הגדרת האדפטר כבר כאן
+        // Initialize the adapter and attach it to the ListView
         adapter = new ChatListAdapter(getContext(), myRooms);
         chatsListView.setAdapter(adapter);
 
         loadMyChats();
+
+        // Listener for clicking on a specific chat room in the list
         chatsListView.setOnItemClickListener((parent, v, position, id) -> {
-            //בכל לחיצה על איבר בlistview
-            ChatRoom selected = myRooms.get(position); // מציאת החדר המתאים בעזרת האינדקס של הlistview
+            ChatRoom selected = myRooms.get(position);
             Intent intent = new Intent(getActivity(), SingleChatActivity.class);
+            // Pass the room ID to the activity so it knows which messages to load
             intent.putExtra("roomId", selected.roomId);
-            //נותנים לintent מידע על החדר כדי שידע איזה נתונים לעלות
             startActivity(intent);
         });
 
-        // 3. הגדרת מאזין ללחיצה (OnClickListener)
+        // Listener for the AI Chat button
         aiChatBtn.setOnClickListener(new View.OnClickListener() {
-            //מאזין ללחיצה על כפתור צאט עם AI
             @Override
             public void onClick(View v) {
-                // מעבר למסך ה-AI
                 Intent intent = new Intent(getActivity(), AiChatActivity.class);
                 startActivity(intent);
             }
         });
 
-
         return view;
     }
 
+    /**
+     * Fetches the chat rooms associated with the current user from Firebase.
+     * 1. Retrieves the list of chat room IDs from Users/{myId}/myChatRooms.
+     * 2. For each ID, fetches the full ChatRoom object from the "ChatRooms" node.
+     */
     private void loadMyChats() {
-        // 1. הפניה לרשימת ה-IDs המאוחדת של המשתמש
+        // Reference to the list of chat IDs for the current user
         DatabaseReference myChatsIdsRef = FirebaseDatabase.getInstance()
                 .getReference("Users")
                 .child(myId)
                 .child("myChatRooms");
 
-        // 2. האזנה לרשימת ה-IDs (אם יתווסף צ'אט חדש, זה יתעדכן אוטומטית)
+        // Listen for changes in the user's chat list
         myChatsIdsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                myRooms.clear(); // מנקים את הרשימה הנוכחית כדי לבנות אותה מחדש
+                myRooms.clear();
 
                 if (!snapshot.exists()) {
-                    // אם אין למשתמש צ'אטים בכלל
                     Toast.makeText(getContext(), "No chats yet!", Toast.LENGTH_LONG).show();
                     adapter.notifyDataSetChanged();
                     return;
                 }
 
-                // 3. מעבר על כל ה-IDs שקיימים ברשימה של המשתמש
+                // Iterate through the list of room IDs
                 for (DataSnapshot ds : snapshot.getChildren()) {
                     String roomId = ds.getValue(String.class);
 
                     if (roomId != null) {
-                        // 4. שליפת פרטי החדר המלאים מתוך ענף ChatRooms לפי ה-ID
+                        // Fetch the full details for each specific room ID
                         FirebaseDatabase.getInstance().getReference("ChatRooms")
                                 .child(roomId)
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -101,7 +124,7 @@ public class ChatsFragment extends Fragment {
                                         ChatRoom room = roomSnapshot.getValue(ChatRoom.class);
                                         if (room != null) {
                                             myRooms.add(room);
-                                            // מעדכנים את האדפטר בכל פעם שחדר "מגיע" מהשרת
+                                            // Update the UI as each room is loaded
                                             adapter.notifyDataSetChanged();
                                         }
                                     }
@@ -121,5 +144,4 @@ public class ChatsFragment extends Fragment {
             }
         });
     }
-
 }

@@ -19,24 +19,61 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
+/**
+ * Adapter for displaying a list of chat rooms in a ListView.
+ * This adapter manages the layout for each chat entry, displaying the subject and 
+ * fetching the other participant's profile information from Firebase.
+ */
 public class ChatListAdapter extends BaseAdapter {
     Context context;
     ArrayList<ChatRoom> chatRooms;
     String myId;
 
+    /**
+     * Initializes the adapter with the context and the list of chat rooms.
+     * It also identifies the current user's ID for filtering participants.
+     *
+     * @param context   The current context.
+     * @param chatRooms The list of chat rooms to display.
+     */
     public ChatListAdapter(Context context, ArrayList<ChatRoom> chatRooms) {
         this.context = context;
         this.chatRooms = chatRooms;
         this.myId = FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
 
+    /**
+     * Returns the size of the chat rooms list.
+     * @return The number of chat rooms in the data set.
+     */
     @Override
     public int getCount() { return chatRooms.size(); }
+
+    /**
+     * Returns the chat room at the specified position.
+     * @param i Position of the item.
+     * @return The ChatRoom object at the specified position.
+     */
     @Override
     public Object getItem(int i) { return chatRooms.get(i); }
+
+    /**
+     * Returns the row ID of the item.
+     * @param i Position of the item.
+     * @return The row ID (the position).
+     */
     @Override
     public long getItemId(int i) { return i; }
 
+    /**
+     * Creates or recycles a view for each chat room item.
+     * Sets the subject and asynchronously loads the other user's name and profile image.
+     *
+     * @param i      Position of the item.
+     * @param view   The old view to reuse, if possible.
+     * @param parent The parent that this view will eventually be attached to.
+     * @return A View corresponding to the data at the specified position.
+     */
     @Override
     public View getView(int i, View view, ViewGroup parent) {
         if (view == null) {

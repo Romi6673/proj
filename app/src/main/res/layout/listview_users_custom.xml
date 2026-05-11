@@ -63,19 +63,6 @@
                 android:textStyle="italic" />
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSendChatRequestBtn"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#81C784"
-            android:text="Chat"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            app:cornerRadius="20dp" />
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

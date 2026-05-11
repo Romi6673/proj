@@ -22,19 +22,37 @@ import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
 
+/**
+ * Manager class for the Google Gemini AI integration.
+ * <p>
+ * This class handles the initialization of the generative model, maintains a
+ * single chat session (Singleton pattern), and manages asynchronous communication
+ * with the Gemini API.
+ */
 public class GeminiChatManager {
-    public static final String SYSTEM_PROMPT ="your name is Joe, and your job is to help teenagers study be" +
-            "friendly and nice and explain every topic the best you can ";
 
+    /**
+     * The initial system prompt that defines the AI's persona.
+     * Instructs the model to act as "Joe," a helpful tutor for teenagers.
+     */
+    public static final String SYSTEM_PROMPT ="your name is Joe, and your job is to help teenagers study ," +
+            " explain every study question with patience and be helpful and nice";
 
-
+    /** The unique singleton instance of this manager. */
     private static GeminiChatManager instance;
+
+    /** The underlying Google Generative AI model instance. */
     private GenerativeModel gemini;
+
+    /** The active chat session which maintains history. */
     private Chat chat;
+
+    /** Tag for logging and debugging. */
     private final String TAG = "GeminiChatManager";
 
     /**
      * Initializes the Gemini model and starts a chat session.
+     * This session allows the model to "remember" previous parts of the conversation.
      */
     private void startChat() {
         chat = gemini.startChat(Collections.emptyList());
@@ -43,7 +61,7 @@ public class GeminiChatManager {
     /**
      * Private constructor to initialize the Gemini model with a system prompt.
      *
-     * @param systemPrompt The system prompt to initialize the model.
+     * @param systemPrompt The instructions provided to the model to define its behavior.
      */
     private GeminiChatManager(String systemPrompt) {
         List<Part> parts = new ArrayList<Part>();
@@ -63,48 +81,58 @@ public class GeminiChatManager {
 
     /**
      * Returns the singleton instance of {@code GeminiChatManager}.
+     * <p>
+     * Ensures a unique and single connection with Google's chat services.
      *
+     * @param systemPrompt The prompt to use if the manager needs to be initialized.
      * @return The singleton instance of {@code GeminiChatManager}.
      */
     public static GeminiChatManager getInstance(String systemPrompt) {
         if (instance == null) {
             instance = new GeminiChatManager(systemPrompt);
-            //חיבור ייחודי ויחיד עם צאט של גוגל
         }
         return instance;
     }
 
     /**
      * Sends a chat message to the Gemini model and receives a text response.
+     * <p>
+     * This operation is asynchronous; the app will continue to run normally
+     * while waiting for the AI to process and return a response.
      *
-     * @param prompt   The text prompt to send to the model.
-     * @param callback The callback to receive the response or error.
-     */
-    /**
-     * Sends a chat message to the Gemini model and receives a text response.
-     *
-     * @param prompt   The text prompt to send to the model.
-     * @param callback The callback to receive the response or error.
+     * @param prompt   The text prompt/message to send to the AI.
+     * @param callback The {@link GeminiCallback} to receive the success or error result.
      */
     public void sendChatMessage(String prompt, GeminiCallback callback) {
         try {
             chat.sendMessage(prompt,
                     new Continuation<GenerateContentResponse>() {
-                //משום שלוקח לגמיני כמה רגעים לענות אנחנו במקביל נמשיך לעבוד כרגיל עד שתגיע תשובה
+
+                        /**
+                         * Provides the coroutine context for the callback.
+                         * @return An empty coroutine context.
+                         */
                         @NonNull
                         @Override
                         public CoroutineContext getContext() {
                             return EmptyCoroutineContext.INSTANCE;
                         }
 
+                        /**
+                         * Called when the message processing is complete.
+                         *
+                         * @param result The result containing the AI's response or an exception.
+                         */
                         @Override
                         public void resumeWith(@NonNull Object result) {
                             try {
                                 if (result instanceof Result.Failure) {
+                                    // Handles failure from the Gemini API
                                     Throwable exception = ((Result.Failure) result).exception;
                                     Log.e(TAG, "Error from Gemini API: " + exception.getMessage());
                                     callback.onFailure(exception);
                                 } else {
+                                    // Successfully received a response
                                     GenerateContentResponse response = (GenerateContentResponse) result;
                                     String text = response.getText();
                                     if (text != null) {
@@ -115,14 +143,14 @@ public class GeminiChatManager {
                                     }
                                 }
                             } catch (Exception e) {
-                                // תופס שגיאות שקורות בזמן עיבוד התשובה (כמו ה-MissingFieldException שראינו)
+                                // Catches errors occurring during response processing (e.g., parsing)
                                 Log.e(TAG, "Error processing response: " + e.getMessage());
                                 callback.onFailure(e);
                             }
                         }
                     });
         } catch (Exception e) {
-            // תופס שגיאות שקורות עוד לפני שליחת ההודעה
+            // Catches errors occurring before the message is even sent
             Log.e(TAG, "Error initiating send: " + e.getMessage());
             callback.onFailure(e);
         }

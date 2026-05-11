@@ -22,15 +22,11 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -51,39 +47,55 @@ import com.google.firebase.storage.UploadTask;
 
 import java.util.Map;
 
+/**
+ * Fragment responsible for displaying and editing the user's profile.
+ * <p>
+ * Features include:
+ * 1. Uploading and displaying a profile picture using Firebase Storage and Glide.
+ * 2. Editing username via a custom AlertDialog.
+ * 3. Managing "Weak" and "Strong" subjects via custom adapters and Spinners.
+ * 4. Persisting a short user biography to Firebase Realtime Database.
+ */
 public class ProfileFragment extends Fragment {
 
+    /** URI of the image selected from the local gallery. */
     Uri selectedImageUri;
 
-
+    /** Root view of the fragment. */
     View view;
-    Button userNameEditBtn;
-    Button saveBioBtn;
-    String userId;
-    EditText bioEditText;
+
+    /** UI component references. */
+    Button userNameEditBtn, saveBioBtn;
+    EditText bioEditText, edit_text_dialog;
     ImageButton profilePictureBtn;
-    Spinner weakSubSpinner;
-    Spinner strongSubSpinner;
+    Spinner weakSubSpinner, strongSubSpinner;
     TextView tvScore;
     LinearLayout dialog_username;
+
+    /** The unique ID of the currently authenticated user. */
+    String userId;
+
+    /** Request codes for permissions and gallery intent. */
     private static final int PICK_IMAGE_REQUEST = 1;
     private static final int REQUEST_READ_STORAGE = 2000;
-    EditText edit_text_dialog; // זה המשתנה שיחזיק את השדה מהדיאלוג
+
+    /** Builder for the username update dialog. */
     AlertDialog.Builder adb;
 
+    /** Lists of available subjects to be displayed in Spinners. */
     public String[] subjectsWeakArr = { "History" , "Math" , "English", "Science"};
     public String[] subjectsStrongArr = { "History" , "Math" , "English", "Science"};
 
+    /** Boolean arrays tracking which subjects are currently selected by the user. */
     public boolean[] subjectsWeakBool = {false, false, false, false};
     public boolean[] subjectsStrongBool = {false, false, false, false};
 
-
-
-
+    /**
+     * Handles the result of the runtime permission request for storage access.
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == REQUEST_READ_STORAGE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 openGallery();
@@ -93,25 +105,26 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    /**
+     * Callback received when the user selects an image from the gallery.
+     * Updates the UI immediately and initiates the Firebase upload.
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        // callback function - gets called when the user picked a picture from the gallery
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == PICK_IMAGE_REQUEST   // בודקת שהאפליקציה קיבלה תשובה מה*גלריה* ולא בחר למשל קובץ pdf
-                && resultCode == getActivity().RESULT_OK && data != null && data.getData() != null) { // בודקת שבאמת נבחרה תמונה ושהחבילה (data) לא ריקה
-
+        if (requestCode == PICK_IMAGE_REQUEST
+                && resultCode == getActivity().RESULT_OK && data != null && data.getData() != null) {
 
             selectedImageUri = data.getData();
-
-            // הצגת התמונה בכפתור מיד (לפני ההעלאה, בשביל חווית משתמש טובה)
-            profilePictureBtn.setImageURI(selectedImageUri);
-
-            // עכשיו מעלים
+            profilePictureBtn.setImageURI(selectedImageUri); // Local preview for better UX
             uploadImageToStorage();
         }
     }
 
+    /**
+     * Uploads the selected image to Firebase Storage and updates the
+     * profilePicUrl in the Realtime Database upon completion.
+     */
     private void uploadImageToStorage() {
         if (selectedImageUri == null) {
             Toast.makeText(getContext(), "No image selected", Toast.LENGTH_SHORT).show();
@@ -124,20 +137,18 @@ public class ProfileFragment extends Fragment {
         progressDialog.setMessage("Uploading...");
         progressDialog.show();
 
-        // 2. העלאת הקובץ
         galleryRef.putFile(selectedImageUri)
                 .addOnSuccessListener(taskSnapshot -> {
-
-                    // 3. הצלחה! עכשיו מושכים את ה-URL של התמונה שהרגע עלתה
+                    // Get the public download URL after successful upload
                     galleryRef.getDownloadUrl().addOnSuccessListener(uri -> {
                         String downloadUrl = uri.toString();
 
-                        // 4. שמירת הלינק ב-Database תחת המשתמש הנוכחי
+                        // Save the URL to the user's database node
                         refUsers.child(userId).child("profilePicUrl").setValue(downloadUrl)
                                 .addOnCompleteListener(task -> {
                                     progressDialog.dismiss();
                                     if (task.isSuccessful()) {
-                                        Toast.makeText(getContext(), "Profile picture updated successfully!", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(getContext(), "Profile picture updated!", Toast.LENGTH_SHORT).show();
                                     } else {
                                         Toast.makeText(getContext(), "Database update failed", Toast.LENGTH_SHORT).show();
                                     }
@@ -150,8 +161,9 @@ public class ProfileFragment extends Fragment {
                 });
     }
 
-
-
+    /**
+     * Launches the system intent to pick an image from the device storage.
+     */
     private void openGallery() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -159,7 +171,10 @@ public class ProfileFragment extends Fragment {
         startActivityForResult(Intent.createChooser(intent, "Select picture"), PICK_IMAGE_REQUEST);
     }
 
-
+    /**
+     * Checks for necessary storage permissions based on Android version.
+     * Required for API levels below Tiramisu (Android 13).
+     */
     public void checkPermissionAndOpenGallery() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -172,101 +187,79 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-
-
-
-
+    /**
+     * Initializes the fragment UI, verifies authentication, and loads user data from Firebase.
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_profile, container, false);
 
-
+        // Security check: Redirect to login if session is invalid
         if (FirebaseAuth.getInstance().getCurrentUser() != null) {
             userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         } else {
-            Intent intent = new Intent(getActivity(), LoginActivity.class);
-            startActivity(intent);
-
-            // 2. סגירת האקטיביטי הנוכחית כדי שהוא לא יוכל לחזור אחורה לפרופיל
+            startActivity(new Intent(getActivity(), LoginActivity.class));
             getActivity().finish();
-
             return view;
         }
 
+        // Initialize UI components
         userNameEditBtn = view.findViewById(R.id.userNameEditBtn);
         profilePictureBtn = view.findViewById(R.id.profilePictureBtn);
         TextView tvUsername = view.findViewById(R.id.tvUsername);
         TextView tvScore = view.findViewById(R.id.tvScore);
+        bioEditText = view.findViewById(R.id.bioEditText);
+        saveBioBtn = view.findViewById(R.id.saveBioBtn);
 
-
-
+        // Setup Subject Adapters
         weakSubSpinner = view.findViewById(R.id.weakSubSpinner);
         strongSubSpinner = view.findViewById(R.id.strongSubSpinner);
 
-        custom_adapter_weak customAdapterWeak = new custom_adapter_weak (getContext(), subjectsWeakArr, subjectsWeakBool);
-        weakSubSpinner.setAdapter(customAdapterWeak) ;
+        custom_adapter_weak customAdapterWeak = new custom_adapter_weak(getContext(), subjectsWeakArr, subjectsWeakBool);
+        weakSubSpinner.setAdapter(customAdapterWeak);
 
-        custom_adapter_strong customAdapterStrong = new custom_adapter_strong (getContext(), subjectsStrongArr, subjectsStrongBool);
-        strongSubSpinner.setAdapter(customAdapterStrong) ;
+        custom_adapter_strong customAdapterStrong = new custom_adapter_strong(getContext(), subjectsStrongArr, subjectsStrongBool);
+        strongSubSpinner.setAdapter(customAdapterStrong);
 
-
-
-
-        saveBioBtn = view.findViewById(R.id.saveBioBtn);
-        bioEditText = view.findViewById(R.id.bioEditText); //כשמתעסקים עם שמירה בפיירבייס ,
-        // לאחר לחיצה על כפתור  save יש לשמור את הביו על פרטי המשתמש
-
-        ImageButton profilePictureBtn = view.findViewById(R.id.profilePictureBtn);
-
+        // Setup Username Dialog View
         dialog_username = (LinearLayout) getLayoutInflater().inflate(R.layout.dialog_username, null);
-
         edit_text_dialog = dialog_username.findViewById(R.id.edit_text_dialog);
 
-
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-
-
+        // Load existing user data from Firebase Realtime Database
         refUsers.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Users u = snapshot.getValue(Users.class);
                 if (u != null) {
-                    // 1. עדכון פרטים כלליים
                     tvUsername.setText(u.userName);
                     bioEditText.setText(u.bio);
                     tvScore.setText("Score: " + u.score);
 
-                    //נשתמש בglide כדי לעלות את הקבצים לתצוגה מהענן
+                    // Load profile image using Glide
                     if (isAdded() && getContext() != null && !isDetached()) {
                         if (u.profilePicUrl != null && !u.profilePicUrl.isEmpty()) {
-                            Glide.with(getContext())
-                                    .load(u.profilePicUrl)
-                                    .into(profilePictureBtn);
+                            Glide.with(getContext()).load(u.profilePicUrl).into(profilePictureBtn);
                         }
                     }
 
-                    // 3. עדכון מערך המקצועות החלשים (Weak Subjects)
+                    // Sync Weak Subjects state
                     if (u.weakSubjects != null) {
                         for (int i = 0; i < subjectsWeakArr.length; i++) {
                             Boolean isSelected = u.weakSubjects.get(subjectsWeakArr[i]);
                             subjectsWeakBool[i] = (isSelected != null && isSelected);
                         }
-
-                        //קריאת נתונים מהענן ושינוי מצב האדפטר ככה שבפעם הבאה שהאפליקציה עולה הswitchים המתאימים יהיו דלוקים
                         if (weakSubSpinner.getAdapter() != null) {
                             ((custom_adapter_weak) weakSubSpinner.getAdapter()).notifyDataSetChanged();
                         }
                     }
 
-                    // 4. עדכון מערך המקצועות החזקים (Strong Subjects)
+                    // Sync Strong Subjects state
                     if (u.strongSubjects != null) {
                         for (int i = 0; i < subjectsStrongArr.length; i++) {
                             Boolean isSelected = u.strongSubjects.get(subjectsStrongArr[i]);
                             subjectsStrongBool[i] = (isSelected != null && isSelected);
                         }
-                        //קריאת נתונים מהענן ושינוי מצב האדפטר ככה שבפעם הבאה שהאפליקציה עולה הswitchים המתאימים יהיו דלוקים
                         if (strongSubSpinner.getAdapter() != null) {
                             ((custom_adapter_strong) strongSubSpinner.getAdapter()).notifyDataSetChanged();
                         }
@@ -280,64 +273,39 @@ public class ProfileFragment extends Fragment {
             }
         });
 
-
-
-
-
+        // Setup Username Update Dialog
         adb = new AlertDialog.Builder(this.getContext());
         adb.setView(dialog_username);
         adb.setTitle("Update Username");
-
 
         adb.setPositiveButton("save", (dialog, which) -> {
             String newUserName = edit_text_dialog.getText().toString();
             tvUsername.setText(newUserName);
             FirebaseDatabase.getInstance().getReference("Users")
-                    .child(userId)
-                    .child("userName")
-                    .setValue(newUserName);
+                    .child(userId).child("userName").setValue(newUserName);
 
-            ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
-            //משום שבכל פעם שמגדירים new alertdialog.builder אז בפעם השניה שמעלים את הדיאלוג הview זוכר את
-            // הבונה הקודם לכן מנתקים את הקישור כדי שיווצר מחדש ללא בעיות
-        });
-
-        userNameEditBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (dialog_username.getParent() != null) {
-                    //השורה מופיעה שוב למקרה ומישהו לא לחץ על הsave אחרי
-                    // הדיאלוג , אלא על המסך ואז הקשר לא התנתק
-                    ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
-                }
-                adb.show();
+            // Workaround: Manually remove the view from parent to allow re-inflating in future calls
+            if (dialog_username.getParent() != null) {
+                ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
             }
         });
 
-        profilePictureBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                checkPermissionAndOpenGallery();
+        userNameEditBtn.setOnClickListener(v -> {
+            // Ensure the view is detached from any previous dialog before showing again
+            if (dialog_username.getParent() != null) {
+                ((ViewGroup) dialog_username.getParent()).removeView(dialog_username);
             }
+            adb.show();
         });
 
+        profilePictureBtn.setOnClickListener(v -> checkPermissionAndOpenGallery());
 
-        saveBioBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-                FirebaseDatabase.getInstance().getReference("Users")
-                        .child(userId)
-                        .child("bio")
-                        .setValue(bioEditText.getText().toString());
-
-            }
+        saveBioBtn.setOnClickListener(v -> {
+            FirebaseDatabase.getInstance().getReference("Users")
+                    .child(userId).child("bio").setValue(bioEditText.getText().toString());
+            Toast.makeText(getContext(), "Bio saved", Toast.LENGTH_SHORT).show();
         });
-
 
         return view;
-
-
     }
 }

@@ -77,7 +77,6 @@
             android:layout_height="45dp"
             android:backgroundTint="#E3F2FD"
             android:src="@android:drawable/ic_menu_send"
-            android:tint="#2196F3"
             android:contentDescription="Send" />
 
     </LinearLayout>
